@@ -2,7 +2,10 @@ import { Router } from "express";
 import { body } from "express-validator";
 import {
   adminLogin,
+  verifyDevice,
 } from "../controllers/adminController.js";
+import { adminAuth } from "../middlewares/adminAuth.js";
+
 
 const router = Router();
 
@@ -39,5 +42,39 @@ router.post(
   ],
   adminLogin
 );
+
+/**
+ * @swagger
+ * /api/admin/verify-device/{deviceId}:
+ *   patch:
+ *     summary: Verify or reject user device
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: deviceId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [verified, rejected]
+ *     responses:
+ *       200:
+ *         description: Device status updated
+ *       404:
+ *         description: User not found
+ */
+router.patch('/verify-device/:deviceId', adminAuth, [
+  body('status').isIn(['verified', 'rejected'])
+], verifyDevice);
 
 export default router;
