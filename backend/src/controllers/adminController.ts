@@ -1,56 +1,31 @@
 import type { Request, Response } from "express";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import mongoose from "mongoose";
-import Admin from "../models/adminModel.js";
-import User from "../models/userModel.js";
-import transactionModel from "../models/transactionModel.js";
+import { AdminService } from "../services/adminService.js";
 
 export const adminLogin = async (req: Request, res: Response) => {
   try {
-    console.log("Request body:", req.body);
     const { email, password } = req.body;
-    console.log("Email:", email, "Password:", password);
 
     if (!email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Email and password are required" });
+      return res.status(400).json({ message: "Email and password are required" });
     }
 
-    const admin = await Admin.findOne({ email });
-    if (!admin) {
-      console.log("No admin found with email:", email);
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, admin.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    const token = jwt.sign({ adminId: admin._id }, process.env.JWT_SECRET!, {
-      expiresIn: "24h",
-    });
-
+    const result = await AdminService.authenticateAdmin(email, password);
+    
     res.json({
       message: "Login successful",
-      token,
-      admin: {
-        id: admin._id,
-        email: admin.email,
-        role: admin.role,
-      },
+      ...result,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    const message = error instanceof Error ? error.message : "Server error";
+    const status = message === "Invalid credentials" ? 400 : 500;
+    res.status(status).json({ message });
   }
 };
 
 export const getAllUsers = async (req: Request, res: Response) => {
   try {
-    const users = await User.find({}, "-password").sort({ createdAt: -1 });
-      res.json(users);
+    const users = await AdminService.getAllUsers();
+    res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
@@ -61,35 +36,27 @@ export const verifyDevice = async (req: Request, res: Response) => {
     const { deviceId } = req.params;
     const { status } = req.body;
 
-    if (!["verified", "rejected"].includes(status)) {
-      return res.status(400).json({ message: "Invalid status" });
+    if (!deviceId) {
+      return res.status(400).json({ message: "Device ID is required" });
     }
 
-    const user = await User.findOneAndUpdate(
-      { deviceId },
-      { status },
-      { new: true, select: "-password" }
-    );
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
+    const user = await AdminService.verifyDevice(deviceId, status);
+    
     res.json({
       message: `Device ${status} successfully`,
       user,
     });
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    const message = error instanceof Error ? error.message : "Server error";
+    const statusCode = message === "User not found" ? 404 : 
+                      message === "Invalid status" ? 400 : 500;
+    res.status(statusCode).json({ message });
   }
 };
 
 export const getAllTransactions = async (req: Request, res: Response) => {
   try {
-    const transactions = await transactionModel.find({})
-      .populate("userId", "name email")
-      .sort({ createdAt: -1 });
-
+    const transactions = await AdminService.getAllTransactions();
     res.json(transactions);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -98,29 +65,8 @@ export const getAllTransactions = async (req: Request, res: Response) => {
 
 export const getDashboardStats = async (req: Request, res: Response) => {
   try {
-    const totalUsers = await User.countDocuments();
-    const pendingUsers = await User.countDocuments({
-      status: "pendingVerification",
-    });
-    const verifiedUsers = await User.countDocuments({ status: "verified" });
-
-    const totalDeposits = await transactionModel.aggregate([
-      { $match: { type: "deposit" } },
-      { $group: { _id: null, total: { $sum: "$amount" } } },
-    ]);
-
-    const totalWithdrawals = await transactionModel.aggregate([
-      { $match: { type: "withdraw" } },
-      { $group: { _id: null, total: { $sum: "$amount" } } },
-    ]);
-
-    res.json({
-      totalUsers,
-      pendingUsers,
-      verifiedUsers,
-      totalDeposits: totalDeposits[0]?.total || 0,
-      totalWithdrawals: totalWithdrawals[0]?.total || 0,
-    });
+    const stats = await AdminService.getDashboardStats();
+    res.json(stats);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
