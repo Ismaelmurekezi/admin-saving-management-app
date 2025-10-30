@@ -95,3 +95,33 @@ export const getAllTransactions = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const getDashboardStats = async (req: Request, res: Response) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const pendingUsers = await User.countDocuments({
+      status: "pendingVerification",
+    });
+    const verifiedUsers = await User.countDocuments({ status: "verified" });
+
+    const totalDeposits = await transactionModel.aggregate([
+      { $match: { type: "deposit" } },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
+    ]);
+
+    const totalWithdrawals = await transactionModel.aggregate([
+      { $match: { type: "withdraw" } },
+      { $group: { _id: null, total: { $sum: "$amount" } } },
+    ]);
+
+    res.json({
+      totalUsers,
+      pendingUsers,
+      verifiedUsers,
+      totalDeposits: totalDeposits[0]?.total || 0,
+      totalWithdrawals: totalWithdrawals[0]?.total || 0,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};

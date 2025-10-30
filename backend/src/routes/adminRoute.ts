@@ -4,6 +4,7 @@ import {
   adminLogin,
   getAllTransactions,
   getAllUsers,
+  getDashboardStats,
   verifyDevice,
 } from "../controllers/adminController.js";
 import { adminAuth } from "../middlewares/adminAuth.js";
@@ -109,5 +110,19 @@ router.patch('/verify-device/:deviceId', adminAuth, [
  *         description: List of transactions
  */
 router.get('/transactions', adminAuth, getAllTransactions);
+
+/**
+ * @swagger
+ * /api/admin/dashboard-stats:
+ *   get:
+ *     summary: Get dashboard statistics
+ *     tags: [Dashboard]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Dashboard statistics
+ */
+router.get('/dashboard-stats', adminAuth, getDashboardStats);
 
 export default router;
