@@ -2,6 +2,7 @@ import { Router } from "express";
 import { body } from "express-validator";
 import {
   adminLogin,
+  getAllTransactions,
   getAllUsers,
   verifyDevice,
 } from "../controllers/adminController.js";
@@ -94,5 +95,19 @@ router.get('/users', adminAuth, getAllUsers);
 router.patch('/verify-device/:deviceId', adminAuth, [
   body('status').isIn(['verified', 'rejected'])
 ], verifyDevice);
+
+/**
+ * @swagger
+ * /api/admin/transactions:
+ *   get:
+ *     summary: Get all transactions
+ *     tags: [Transactions]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of transactions
+ */
+router.get('/transactions', adminAuth, getAllTransactions);
 
 export default router;

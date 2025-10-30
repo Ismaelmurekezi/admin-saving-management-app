@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import Admin from "../models/adminModel.js";
 import User from "../models/userModel.js";
+import transactionModel from "../models/transactionModel.js";
 
 export const adminLogin = async (req: Request, res: Response) => {
   try {
@@ -78,6 +79,18 @@ export const verifyDevice = async (req: Request, res: Response) => {
       message: `Device ${status} successfully`,
       user,
     });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const getAllTransactions = async (req: Request, res: Response) => {
+  try {
+    const transactions = await transactionModel.find({})
+      .populate("userId", "name email")
+      .sort({ createdAt: -1 });
+
+    res.json(transactions);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
