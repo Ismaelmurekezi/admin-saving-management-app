@@ -46,6 +46,15 @@ export const adminLogin = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await User.find({}, "-password").sort({ createdAt: -1 });
+      res.json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 export const verifyDevice = async (req: Request, res: Response) => {
   try {
     const { deviceId } = req.params;

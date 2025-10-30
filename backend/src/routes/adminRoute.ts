@@ -2,6 +2,7 @@ import { Router } from "express";
 import { body } from "express-validator";
 import {
   adminLogin,
+  getAllUsers,
   verifyDevice,
 } from "../controllers/adminController.js";
 import { adminAuth } from "../middlewares/adminAuth.js";
@@ -42,6 +43,23 @@ router.post(
   ],
   adminLogin
 );
+
+
+/**
+ * @swagger
+ * /api/admin/users:
+ *   get:
+ *     summary: Get all users
+ *     tags: [User Management]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of users
+ *       401:
+ *         description: Unauthorized
+ */
+router.get('/users', adminAuth, getAllUsers);
 
 /**
  * @swagger
