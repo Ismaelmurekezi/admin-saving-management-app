@@ -1,18 +1,64 @@
 import { ChevronLeft, ChevronRight, DollarSign, Filter, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { adminAPI } from "../services/api";
+import { toast } from "react-toastify";
+import StatsCard from "../components/StatsCard";
 
+interface Transaction {
+  _id: string;
+  userId: {
+    name: string;
+    email: string;
+  };
+  type: "deposit" | "withdraw";
+  amount: number;
+  balanceAfter: number;
+  createdAt: string;
+}
 
 export default function Transaction() {
- return (
-   <div className="p-8">
-     <div className="bg-white w-80 rounded-lg p-6 shadow-sm mb-8 inline-block">
-       <div className="flex items-center  justify-between mb-2">
-         <p className="text-sm font-medium text-gray-600">Total Deposit</p>
-         <div className="w-10 h-10 bg-yellow-600 rounded-lg flex items-center justify-center ml-8">
-           <DollarSign className="w-6 h-6 text-white" />
-         </div>
-       </div>
-       <p className="text-3xl font-bold text-yellow-600">200</p>
-     </div>
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchTransactions();
+  }, []);
+
+  const fetchTransactions = async () => {
+    try {
+      const response = await adminAPI.getTransactions();
+      setTransactions(response.data);
+    } catch (error) {
+      toast.error("Failed to fetch transactions");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const totalDeposits = transactions
+    .filter(t => t.type === "deposit")
+    .reduce((sum, t) => sum + t.amount, 0);
+  
+  const totalWithdrawals = transactions
+    .filter(t => t.type === "withdraw")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  if (loading) {
+    return (
+      <div className="p-8">
+        <div className="text-center">Loading transactions...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8">
+      {/* Transaction Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <StatsCard title="Total Deposits" value={`$${totalDeposits.toLocaleString()}`} icon={DollarSign} color="green" />
+        <StatsCard title="Total Withdrawals" value={`$${totalWithdrawals.toLocaleString()}`} icon={DollarSign} color="red" />
+        <StatsCard title="Total Transactions" value={transactions.length} icon={DollarSign} color="blue" />
+      </div>
 
      <div className="p-6 ">
        <h3 className="text-lg font-semibold text-teal-700">Transaction List</h3>
@@ -49,58 +95,68 @@ export default function Transaction() {
                  EMAIL
                </th>
                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                 STATUS
+                 AMOUNT
                </th>
                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                 BALANCE
+                 TYPE
                </th>
                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
-                 ACTIONS
+                 BALANCE AFTER
+               </th>
+               <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                 DATE
                </th>
              </tr>
            </thead>
            <tbody className="divide-y divide-gray-200">
-             {[...Array(5)].map((_, i) => (
-               <tr key={i}>
-                 <td className="px-6 py-4 text-sm text-gray-700">Peter pan</td>
-                 <td className="px-6 py-4 text-sm text-gray-700">
-                   Peter@gmail.com
-                 </td>
+             {transactions.map((transaction) => (
+               <tr key={transaction._id} className="hover:bg-gray-50">
+                 <td className="px-6 py-4 text-sm text-gray-700">{transaction.userId.name}</td>
+                 <td className="px-6 py-4 text-sm text-gray-700">{transaction.userId.email}</td>
+                 <td className="px-6 py-4 text-sm text-gray-700">${transaction.amount.toLocaleString()}</td>
                  <td className="px-6 py-4">
-                   <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                     Accepted
+                   <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                     transaction.type === "deposit" 
+                       ? "bg-green-100 text-green-700" 
+                       : "bg-red-100 text-red-700"
+                   }`}>
+                     {transaction.type}
                    </span>
                  </td>
-                 <td className="px-6 py-4 text-sm text-gray-700">$ 12000</td>
-                 <td className="px-6 py-4">
-                   <div className="flex gap-2">
-                     <button className="px-3 py-1 bg-green-500 text-white rounded text-xs">
-                       Verify
-                     </button>
-                     <button className="px-3 py-1 bg-red-500 text-white rounded text-xs">
-                       Reject
-                     </button>
-                   </div>
+                 <td className="px-6 py-4 text-sm text-gray-700">${transaction.balanceAfter.toLocaleString()}</td>
+                 <td className="px-6 py-4 text-sm text-gray-700">
+                   {new Date(transaction.createdAt).toLocaleDateString("en-US", {
+                     year: "numeric",
+                     month: "short",
+                     day: "numeric",
+                     hour: "2-digit",
+                     minute: "2-digit"
+                   })}
                  </td>
                </tr>
              ))}
            </tbody>
          </table>
 
-         <div className="flex items-center justify-end gap-4 mt-4">
-           <button className="flex items-center gap-1 text-sm text-gray-600">
-             <ChevronLeft className="w-4 h-4" />
-             Previous
-           </button>
-           <div className="flex gap-2">
-             <button className="w-8 h-8 rounded bg-gray-100">1</button>
-             <button className="w-8 h-8 rounded">2</button>
-             <button className="w-8 h-8 rounded">3</button>
+         <div className="flex items-center justify-between mt-4">
+           <p className="text-sm text-gray-700">
+             Showing {transactions.length} of {transactions.length} results
+           </p>
+           <div className="flex items-center gap-4">
+             <button className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800">
+               <ChevronLeft className="w-4 h-4" />
+               Previous
+             </button>
+             <div className="flex gap-2">
+               <button className="w-8 h-8 rounded bg-teal-600 text-white text-sm">1</button>
+               <button className="w-8 h-8 rounded hover:bg-gray-100 text-sm">2</button>
+               <button className="w-8 h-8 rounded hover:bg-gray-100 text-sm">3</button>
+             </div>
+             <button className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800">
+               Next
+               <ChevronRight className="w-4 h-4" />
+             </button>
            </div>
-           <button className="flex items-center gap-1 text-sm text-gray-600">
-             Next
-             <ChevronRight className="w-4 h-4" />
-           </button>
          </div>
        </div>
      </div>
