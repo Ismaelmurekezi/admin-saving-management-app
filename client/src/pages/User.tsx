@@ -57,7 +57,7 @@ export default function User() {
       {/* Users Table */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-teal-700 mb-4">All Users</h3>
-        <UserTable />
+        <UserTable onUserUpdate={fetchUsers} />
       </div>
     </div>
   );

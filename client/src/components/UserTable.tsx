@@ -12,7 +12,11 @@ interface User {
   balance: number;
 }
 
-export default function UserTable() {
+interface UserTableProps {
+  onUserUpdate?: () => void;
+}
+
+export default function UserTable({ onUserUpdate }: UserTableProps) {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -36,6 +40,7 @@ export default function UserTable() {
       await adminAPI.verifyDevice(deviceId, status);
       toast.success(`Device ${status} successfully`);
       fetchUsers(); // Refresh the list
+      onUserUpdate?.(); // Notify parent component
     } catch (error: any) {
       toast.error(error.response?.data?.message || "Failed to update device status");
     }
