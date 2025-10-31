@@ -1,21 +1,66 @@
 import { DollarSign, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { adminAPI } from "../services/api";
+import { toast } from "react-toastify";
 import StatsCard from "./StatsCard";
 import UserTable from "./UserTable";
 
+interface DashboardStats {
+  totalUsers: number;
+  pendingUsers: number;
+  verifiedUsers: number;
+  totalDeposits: number;
+  totalWithdrawals: number;
+}
+
 export default function DashboardContent() {
-  const stats = [
-    { title: "Total Users", value: 200, icon: Users, color: "blue" },
-    { title: "Pending Verification", value: 56, icon: Users, color: "yellow" },
-    { title: "Verified Users", value: 144, icon: Users, color: "green" },
-    { title: "Total Deposits", value: "$45,678", icon: DollarSign, color: "green" },
-    { title: "Total Withdrawals", value: "$12,345", icon: DollarSign, color: "red" },
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardStats();
+  }, []);
+
+  const fetchDashboardStats = async () => {
+    try {
+      const response = await adminAPI.getDashboardStats();
+      setStats(response.data);
+    } catch (error) {
+      toast.error("Failed to fetch dashboard stats");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="p-6">
+        <div className="text-center">Loading dashboard...</div>
+      </div>
+    );
+  }
+
+  if (!stats) {
+    return (
+      <div className="p-6">
+        <div className="text-center text-red-600">Failed to load dashboard stats</div>
+      </div>
+    );
+  }
+
+  const statsCards = [
+    { title: "Total Users", value: stats.totalUsers, icon: Users, color: "blue" },
+    { title: "Pending Verification", value: stats.pendingUsers, icon: Users, color: "yellow" },
+    { title: "Verified Users", value: stats.verifiedUsers, icon: Users, color: "green" },
+    { title: "Total Deposits", value: `$${stats.totalDeposits.toLocaleString()}`, icon: DollarSign, color: "green" },
+    { title: "Total Withdrawals", value: `$${stats.totalWithdrawals.toLocaleString()}`, icon: DollarSign, color: "red" },
   ];
 
   return (
     <div className="p-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {stats.map((stat, index) => (
+        {statsCards.map((stat, index) => (
           <StatsCard
             key={index}
             title={stat.title}

@@ -1,4 +1,7 @@
 import { DollarSign, LayoutDashboard, LogOut, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useAuthStore } from "../store/authStore";
 
 interface SidebarProps {
   activeTab: string;
@@ -6,6 +9,14 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
+  const navigate = useNavigate();
+  const { logout } = useAuthStore();
+
+  const handleLogout = () => {
+    logout();
+    toast.success("Logged out successfully");
+    navigate("/login");
+  };
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "users", label: "Users", icon: Users },
@@ -38,7 +49,10 @@ export default function Sidebar({ activeTab, setActiveTab }: SidebarProps) {
         })}
       </nav>
 
-      <button className="flex items-center gap-3 px-8 py-4 text-red-600 hover:bg-red-50 m-4 rounded-lg">
+      <button 
+        onClick={handleLogout}
+        className="flex items-center gap-3 px-8 py-4 text-red-600 hover:bg-red-50 m-4 rounded-lg"
+      >
         <LogOut className="w-5 h-5" />
         <span>Logout</span>
       </button>
