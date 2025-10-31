@@ -1,10 +1,40 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { useAuthStore } from "../store/authStore";
+import { adminAPI } from "../services/api";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const navigate = useNavigate();
+  const { login } = useAuthStore();
+
+  const handleLogin = async () => {
+    if (!email || !password) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await adminAPI.login(email, password);
+      const { admin, token } = response.data;
+      
+      login(admin, token);
+      toast.success("Login successful!");
+      navigate("/dashboard");
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Login failed");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
@@ -26,7 +56,10 @@ const Login = () => {
               <input
                 type="email"
                 placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                required
               />
             </div>
 
@@ -38,7 +71,10 @@ const Login = () => {
                 <input
                   type={showPassword ? "text" : "password"}
                   placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  required
                 />
                 <button
                   onClick={() => setShowPassword(!showPassword)}
@@ -68,8 +104,12 @@ const Login = () => {
               </a>
             </div>
 
-            <button className="w-full bg-teal-800 text-white py-3 rounded-md font-medium hover:bg-teal-900 transition">
-              LOGIN
+            <button 
+              onClick={handleLogin}
+              disabled={isLoading}
+              className="w-full bg-teal-800 text-white py-3 rounded-md font-medium hover:bg-teal-900 transition disabled:opacity-50"
+            >
+              {isLoading ? "LOGGING IN..." : "LOGIN"}
             </button>
 
             <p className="text-center text-sm text-gray-600">
