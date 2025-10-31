@@ -1,32 +1,69 @@
 import { ChevronLeft, ChevronRight, Filter, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { adminAPI } from "../services/api";
+import { toast } from "react-toastify";
 
 interface User {
-  id: string;
+  _id: string;
   name: string;
   email: string;
-  status: "verified" | "pending" | "rejected";
+  deviceId: string;
+  status: "pendingVerification" | "verified" | "rejected";
   balance: number;
 }
 
-interface UserTableProps {
-  users?: User[];
-}
+export default function UserTable() {
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default function UserTable({ users = [] }: UserTableProps) {
-  const mockUsers: User[] = [
-    { id: "1", name: "Peter Pan", email: "peter@gmail.com", status: "verified", balance: 12000 },
-    { id: "2", name: "John Doe", email: "john@gmail.com", status: "pending", balance: 5000 },
-    { id: "3", name: "Jane Smith", email: "jane@gmail.com", status: "rejected", balance: 0 },
-  ];
+  useEffect(() => {
+    fetchUsers();
+  }, []);
 
-  const displayUsers = users.length > 0 ? users : mockUsers;
+  const fetchUsers = async () => {
+    try {
+      const response = await adminAPI.getUsers();
+      setUsers(response.data);
+    } catch (error: any) {
+      toast.error("Failed to fetch users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyDevice = async (deviceId: string, status: "verified" | "rejected") => {
+    try {
+      await adminAPI.verifyDevice(deviceId, status);
+      toast.success(`Device ${status} successfully`);
+      fetchUsers(); // Refresh the list
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || "Failed to update device status");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-8 text-center">
+        <p>Loading users...</p>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case "verified": return "bg-green-100 text-green-700";
-      case "pending": return "bg-yellow-100 text-yellow-700";
+      case "pendingVerification": return "bg-yellow-100 text-yellow-700";
       case "rejected": return "bg-red-100 text-red-700";
       default: return "bg-gray-100 text-gray-700";
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "pendingVerification": return "Pending";
+      case "verified": return "Verified";
+      case "rejected": return "Rejected";
+      default: return status;
     }
   };
 
@@ -65,22 +102,30 @@ export default function UserTable({ users = [] }: UserTableProps) {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {displayUsers.map((user) => (
-                <tr key={user.id} className="hover:bg-gray-50">
+              {users.map((user) => (
+                <tr key={user._id} className="hover:bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-700">{user.name}</td>
                   <td className="px-6 py-4 text-sm text-gray-700">{user.email}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${getStatusColor(user.status)}`}>
-                      {user.status}
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(user.status)}`}>
+                      {getStatusLabel(user.status)}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">${user.balance.toLocaleString()}</td>
                   <td className="px-6 py-4">
                     <div className="flex gap-2">
-                      <button className="px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600">
+                      <button
+                        onClick={() => handleVerifyDevice(user.deviceId, "verified")}
+                        disabled={user.status === "verified"}
+                        className="px-3 py-1 bg-green-500 text-white rounded text-xs hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
                         Verify
                       </button>
-                      <button className="px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600">
+                      <button
+                        onClick={() => handleVerifyDevice(user.deviceId, "rejected")}
+                        disabled={user.status === "rejected"}
+                        className="px-3 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
                         Reject
                       </button>
                     </div>
@@ -93,7 +138,7 @@ export default function UserTable({ users = [] }: UserTableProps) {
 
         <div className="flex items-center justify-between mt-4">
           <p className="text-sm text-gray-700">
-            Showing {displayUsers.length} of {displayUsers.length} results
+            Showing {users.length} of {users.length} results
           </p>
           <div className="flex items-center gap-4">
             <button className="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800">
