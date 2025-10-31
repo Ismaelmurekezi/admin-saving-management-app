@@ -39,7 +39,7 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="mb-8">
+        <div className="mb-8 absolute left-10 top-6">
           <h1 className="text-2xl font-bold text-teal-700">USeve</h1>
         </div>
 
