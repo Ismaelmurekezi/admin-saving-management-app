@@ -65,21 +65,19 @@ const Layout = () => {
         {/* Header */}
         <header className="bg-white border-b px-8 py-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-800">
-            {activeTab === "dashboard" && "Welcome back , Bryan"}
+            {activeTab === "dashboard" && "Welcome back"}
             {activeTab === "users" && "User Management"}
-            {activeTab === "transactions" && "Transaction management"}
+            {activeTab === "transactions" && "Transaction Management"}
           </h2>
           <div className="flex items-center gap-4">
             <Bell className="w-6 h-6 text-gray-600" />
             <div className="flex items-center gap-3">
-              <img
-                src="/api/placeholder/40/40"
-                alt="User"
-                className="w-10 h-10 rounded-full"
-              />
+              <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center">
+                <span className="text-white font-medium text-sm">A</span>
+              </div>
               <div>
-                <p className="font-medium text-sm">Bryan Mike</p>
-                <p className="text-xs text-gray-500">Student</p>
+                <p className="font-medium text-sm">Admin</p>
+                <p className="text-xs text-gray-500">Administrator</p>
               </div>
             </div>
           </div>

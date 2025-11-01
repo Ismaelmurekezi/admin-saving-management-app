@@ -1,14 +1,4 @@
-# Backend
-backend/node_modules/
-backend/.env
-backend/dist/ 
-
-
-# Frontend (if any)
-frontend/node_modules/
-frontend/.env
-
-# Common
+# Common files across all directories
 node_modules/
 .env
 dist/
@@ -20,6 +10,5 @@ build/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 coverage/
 .cache/

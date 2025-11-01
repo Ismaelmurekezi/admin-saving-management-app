@@ -13,7 +13,7 @@ const options = {
       {
         url:
           process.env.NODE_ENV === "production"
-            ? "https://your-domain.com"
+            ? process.env.RENDER_EXTERNAL_URL || "https://your-render-app.onrender.com"
             : "http://localhost:5001",
         description:
           process.env.NODE_ENV === "production"

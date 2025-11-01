@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+*.log
+.env
+.DS_Store
+coverage/
+*.tsbuildinfo
+
+# Compiled TypeScript files in src directory
+src/**/*.js
+src/**/*.d.ts
+src/**/*.js.map
+src/**/*.d.ts.map

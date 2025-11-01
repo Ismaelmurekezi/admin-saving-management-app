@@ -14,9 +14,14 @@ export default function Header({ title }: HeaderProps) {
       <div className="flex items-center gap-4">
         <Bell className="w-6 h-6 text-gray-600" />
         <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center">
+            <span className="text-white font-medium text-sm">
+              {admin?.email?.charAt(0).toUpperCase() || "A"}
+            </span>
+          </div>
           <div>
             <p className="font-medium text-sm">{admin?.email || "Admin"}</p>
-            <p className="text-xs text-gray-500">{admin?.role || "Admin"}</p>
+            <p className="text-xs text-gray-500">{admin?.role || "Administrator"}</p>
           </div>
         </div>
       </div>
