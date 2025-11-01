@@ -9,18 +9,27 @@ const options = {
       version: "1.0.0",
       description: "API documentation for Admin Management Application",
     },
-    servers: [
-      {
-        url:
-          process.env.NODE_ENV === "production"
-            ? process.env.RENDER_EXTERNAL_URL || "https://your-render-app.onrender.com"
-            : "http://localhost:5001",
-        description:
-          process.env.NODE_ENV === "production"
-            ? "Production server"
-            : "Development server",
-      },
-    ],
+    servers: process.env.NODE_ENV === "production"
+      ? [
+          {
+            url: process.env.RENDER_EXTERNAL_URL || "https://your-render-app.onrender.com",
+            description: "Production server (current)",
+          },
+          {
+            url: "http://localhost:5001",
+            description: "Development server (may not work from production)",
+          }
+        ]
+      : [
+          {
+            url: "http://localhost:5001",
+            description: "Development server (current)",
+          },
+          {
+            url: process.env.RENDER_EXTERNAL_URL || "https://your-render-app.onrender.com",
+            description: "Production server",
+          }
+        ],
     components: {
       securitySchemes: {
         bearerAuth: {
