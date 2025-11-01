@@ -28,9 +28,12 @@ app.use(helmet({
 
 app.use(
   cors({
-    origin: process.env.NODE_ENV === "production" 
-      ? [process.env.FRONTEND_URL, process.env.RENDER_EXTERNAL_URL].filter(Boolean) as string[]
-      : ["http://localhost:5173", "http://localhost:5001"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5001", 
+      process.env.FRONTEND_URL,
+      process.env.RENDER_EXTERNAL_URL,
+    ].filter(Boolean) as string[],
     credentials: true,
   })
 );
@@ -57,7 +60,6 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-// Routes
 app.use('/api/admin', adminRoutes);
 
 app.get("/health", (req, res) => {
